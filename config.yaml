@@ -1,0 +1,28 @@
+# CPA-Tool 配置示例
+# 环境变量优先级高于此文件中的同名配置
+
+# CLIProxyAPI 管理 API 地址
+base_url: "http://localhost:8317"
+
+# 管理 API 密钥（建议通过 CPA_MANAGEMENT_KEY 环境变量设置）
+# management_key: "your-key-here"
+
+# 轮询间隔（秒）
+poll_interval: 60
+
+# 配额百分比阈值 — 低于此值自动禁用账户
+quota_threshold: 10
+
+# 监控的提供商过滤（留空 = 监控全部）
+# provider_filter:
+#   - claude
+#   - gemini-cli
+
+# Webhook 通知 URL（留空 = 不通知）
+# webhook_url: "https://your-webhook-endpoint.example.com"
+
+# 凭据备份目录
+backup_dir: "/data/backups"
+
+# 试运行模式 — 只记录日志不实际操作
+dry_run: false
