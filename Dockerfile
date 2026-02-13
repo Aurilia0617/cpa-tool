@@ -8,6 +8,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY config.yaml .
 COPY src/ src/
 
-RUN mkdir -p /data/backups
-
 CMD ["python", "-m", "src.main"]

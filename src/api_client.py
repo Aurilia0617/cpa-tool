@@ -32,11 +32,32 @@ class APIClient:
             await self._client.aclose()
 
     async def list_auth_files(self) -> list[dict[str, Any]]:
-        """GET /v0/management/auth-files — list all OAuth credentials."""
+        """GET /v0/management/auth-files — list all OAuth credentials.
+
+        Response format: {"files": [{"name": ..., "status": ..., ...}, ...]}
+        """
         client = await self._get_client()
         resp = await client.get(f"{API_PREFIX}/auth-files")
         resp.raise_for_status()
-        return resp.json()
+        data = resp.json()
+        # API returns {"files": [...]} wrapper
+        if isinstance(data, dict):
+            return data.get("files", [])
+        # Fallback: if API returns a plain list
+        if isinstance(data, list):
+            return data
+        return []
+
+    async def set_auth_file_status(self, name: str, disabled: bool) -> None:
+        """PATCH /v0/management/auth-files/status — toggle disabled state."""
+        client = await self._get_client()
+        resp = await client.patch(
+            f"{API_PREFIX}/auth-files/status",
+            json={"name": name, "disabled": disabled},
+        )
+        resp.raise_for_status()
+        action = "Disabled" if disabled else "Enabled"
+        logger.info("%s auth file: %s", action, name)
 
     async def download_auth_file(self, name: str) -> bytes:
         """GET /v0/management/auth-files/download?name=xxx — download credential file."""
@@ -53,10 +74,10 @@ class APIClient:
         logger.info("Deleted auth file: %s", name)
 
     async def upload_auth_file(self, name: str, content: bytes) -> None:
-        """POST /v0/management/auth-files — upload credential file."""
+        """POST /v0/management/auth-files/upload — upload credential file."""
         client = await self._get_client()
         resp = await client.post(
-            f"{API_PREFIX}/auth-files",
+            f"{API_PREFIX}/auth-files/upload",
             files={"file": (name, content, "application/json")},
         )
         resp.raise_for_status()

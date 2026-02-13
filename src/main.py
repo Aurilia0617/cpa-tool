@@ -6,7 +6,6 @@ import signal
 import sys
 
 from .api_client import APIClient
-from .backup import BackupManager
 from .config import Config
 from .monitor import check_and_act
 from .notifier import Notifier
@@ -21,7 +20,6 @@ logger = logging.getLogger("cpa-tool")
 
 async def run(cfg: Config) -> None:
     api = APIClient(cfg.base_url, cfg.management_key)
-    backup = BackupManager(cfg.backup_dir)
     notifier = Notifier(cfg.webhook_url)
 
     stop = asyncio.Event()
@@ -35,9 +33,8 @@ async def run(cfg: Config) -> None:
         loop.add_signal_handler(sig, _signal_handler)
 
     logger.info(
-        "CPA-Tool started — polling every %ds, threshold %d%%, dry_run=%s",
+        "CPA-Tool started — polling every %ds, dry_run=%s",
         cfg.poll_interval,
-        cfg.quota_threshold,
         cfg.dry_run,
     )
     if cfg.provider_filter:
@@ -45,7 +42,7 @@ async def run(cfg: Config) -> None:
 
     try:
         while not stop.is_set():
-            await check_and_act(cfg, api, backup, notifier)
+            await check_and_act(cfg, api, notifier)
             try:
                 await asyncio.wait_for(stop.wait(), timeout=cfg.poll_interval)
             except asyncio.TimeoutError:
